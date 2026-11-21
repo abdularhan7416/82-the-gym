@@ -14,6 +14,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="google-site-verification" content="hqaaEKWlSu6paInBXQp3qqJi_1t95TEc30GJune2D_8">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -287,6 +288,12 @@ footer{background:var(--black);border-top:1px solid rgba(201,168,76,.12);padding
 @media(prefers-reduced-motion:reduce){
   *{animation-duration:.01ms!important;transition-duration:.01ms!important}
 }
+
+/* Respect reduced-motion preferences and avoid unnecessary mobile animations. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
 </style>
 </head>
 <body>
@@ -446,7 +453,7 @@ footer{background:var(--black);border-top:1px solid rgba(201,168,76,.12);padding
 <!-- LIGHTBOX -->
 <div class="lightbox" id="lightbox">
   <button class="lightbox-close" id="lbClose">✕</button>
-  <img id="lbImg" src="" alt="Gallery">
+  <img id="lbImg" src="" alt="82 The Gym photo gallery" width="1200" height="800" decoding="async">
 </div>
 
 <!-- PARALLAX STRIP -->
@@ -713,14 +720,17 @@ class Particle {
   }
 }
 
-for (let i = 0; i < 90; i++) particles.push(new Particle());
+const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const particleCount = prefersReducedMotion ? 0 : (window.matchMedia("(max-width: 768px)").matches ? 24 : 70);
+for (let i = 0; i < particleCount; i++) particles.push(new Particle());
 
 function animateParticles() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   particles.forEach(p => { p.update(); p.draw(); });
-  requestAnimationFrame(animateParticles);
+  if (!document.hidden && particleCount > 0) requestAnimationFrame(animateParticles);
 }
-animateParticles();
+if (particleCount > 0) animateParticles();
+document.addEventListener("visibilitychange", () => { if (!document.hidden && particleCount > 0) animateParticles(); });
 
 // ── MAGNETIC BUTTONS ─────────────────────────────────────
 document.querySelectorAll('.btn-primary, .btn-outline, .float-wa, .float-call').forEach(btn => {
@@ -764,7 +774,7 @@ function updateTrail() {
   requestAnimationFrame(updateTrail);
 }
 // Only on non-touch devices
-if (window.matchMedia('(hover:hover)').matches) updateTrail();
+if (window.matchMedia('(hover:hover) and (pointer:fine)').matches && !prefersReducedMotion) updateTrail();
 
 // ── 3D TILT on service cards ─────────────────────────────
 document.querySelectorAll('.service-card').forEach(card => {
@@ -796,7 +806,7 @@ function parallaxRaf() {
   }
   requestAnimationFrame(parallaxRaf);
 }
-parallaxRaf();
+if (!prefersReducedMotion && window.matchMedia("(min-width: 769px)").matches) parallaxRaf();
 
 // ── SECTION TITLE CHAR-BY-CHAR REVEAL ────────────────────
 const titleObserver = new IntersectionObserver((entries) => {
@@ -828,7 +838,7 @@ if (heroH1) {
   heroH1.style.webkitBackgroundClip = 'text';
   heroH1.style.backgroundClip = 'text';
   heroH1.style.webkitTextFillColor = 'transparent';
-  heroH1.style.animation = 'shimmer 5s linear infinite 2s';
+  if (!prefersReducedMotion) heroH1.style.animation = 'shimmer 5s linear infinite 2s';
 }
 
 // ── LIGHTBOX ─────────────────────────────────────────────
@@ -850,7 +860,7 @@ window.addEventListener('load', () => {
   setTimeout(() => {
     document.getElementById('loader').classList.add('done');
     document.getElementById('heroBg').style.transform = 'scale(1)';
-  }, 1600);
+  }, 350);
 });
 
 // ── NAV CTA ──────────────────────────────────────────────
